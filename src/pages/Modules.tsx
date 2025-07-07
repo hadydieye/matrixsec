@@ -69,12 +69,12 @@ export default function Modules() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-dark p-6">
+    <div className="min-h-screen bg-gradient-dark p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4 text-glow-primary">Modules de Formation</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-glow-primary">Modules de Formation</h1>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl">
             Explorez nos modules de formation complets en cybersécurité, organisés par domaine d'expertise.
           </p>
         </div>
@@ -98,18 +98,18 @@ export default function Modules() {
 
         {/* Category Tabs */}
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8 bg-card/30 backdrop-blur-xl">
-            <TabsTrigger value="all" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 md:mb-8 bg-card/30 backdrop-blur-xl">
+            <TabsTrigger value="all" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs md:text-sm">
               Tous
             </TabsTrigger>
-            <TabsTrigger value="hacking-ethique" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
-              Hacking Éthique
+            <TabsTrigger value="hacking-ethique" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs md:text-sm">
+              Hacking
             </TabsTrigger>
-            <TabsTrigger value="redteaming" className="data-[state=active]:bg-secondary/20 data-[state=active]:text-secondary">
-              Red Teaming
+            <TabsTrigger value="redteaming" className="data-[state=active]:bg-secondary/20 data-[state=active]:text-secondary text-xs md:text-sm">
+              Red Team
             </TabsTrigger>
-            <TabsTrigger value="blueteaming" className="data-[state=active]:bg-accent/20 data-[state=active]:text-accent">
-              Blue Teaming
+            <TabsTrigger value="blueteaming" className="data-[state=active]:bg-accent/20 data-[state=active]:text-accent text-xs md:text-sm">
+              Blue Team
             </TabsTrigger>
           </TabsList>
 
@@ -127,7 +127,7 @@ export default function Modules() {
                   </div>
                 </div>
                 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                   {category.modules.map((module) => (
                     <Card key={module.id} className="glass-card hover-glow group">
                       <CardHeader>
@@ -179,7 +179,7 @@ export default function Modules() {
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {category.modules.map((module) => (
                   <Card key={module.id} className="glass-card hover-glow group">
                     <CardHeader>

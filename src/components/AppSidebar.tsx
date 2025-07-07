@@ -21,9 +21,9 @@ const mainItems = [
 ];
 
 const moduleCategories = [
-  { title: "Hacking Éthique", url: "/modules/hacking-ethique", icon: Shield },
-  { title: "Red Teaming", url: "/modules/redteaming", icon: Zap },
-  { title: "Blue Teaming", url: "/modules/blueteaming", icon: Brain },
+  { title: "Hacking Éthique", url: "/modules", icon: Shield },
+  { title: "Red Teaming", url: "/modules", icon: Zap },
+  { title: "Blue Teaming", url: "/modules", icon: Brain },
 ];
 
 export function AppSidebar() {

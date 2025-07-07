@@ -2,21 +2,24 @@ import { HeroSection } from "@/components/HeroSection";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { BookOpen, Target, Trophy, Clock, TrendingUp, Star } from "lucide-react";
 
 export default function Home() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-gradient-dark">
       <HeroSection />
       
       {/* Quick Stats Section */}
-      <section className="py-16 px-6">
+      <section className="py-8 md:py-16 px-4 md:px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12 text-glow-primary">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 text-glow-primary">
             Votre Progression
           </h2>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             <Card className="glass-card hover-glow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Modules Terminés</CardTitle>
@@ -73,16 +76,20 @@ export default function Home() {
       </section>
 
       {/* Featured Modules Section */}
-      <section className="py-16 px-6 bg-card/5">
+      <section className="py-8 md:py-16 px-4 md:px-6 bg-card/5">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-3xl font-bold text-glow-secondary">Modules Recommandés</h2>
-            <Button variant="outline" className="btn-glass">
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 md:mb-12 gap-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-glow-secondary">Modules Recommandés</h2>
+            <Button 
+              variant="outline" 
+              className="btn-glass"
+              onClick={() => navigate('/modules')}
+            >
               Voir Tous les Modules
             </Button>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {/* Module Cards */}
             <Card className="glass-card hover-glow group">
               <CardHeader>
@@ -113,7 +120,10 @@ export default function Home() {
                     12 quiz
                   </span>
                 </div>
-                <Button className="w-full btn-matrix">
+                <Button 
+                  className="w-full btn-matrix"
+                  onClick={() => navigate('/modules')}
+                >
                   Commencer le Module
                 </Button>
               </CardContent>
@@ -148,7 +158,10 @@ export default function Home() {
                     18 quiz
                   </span>
                 </div>
-                <Button className="w-full btn-cyber">
+                <Button 
+                  className="w-full btn-cyber"
+                  onClick={() => navigate('/modules')}
+                >
                   Commencer le Module
                 </Button>
               </CardContent>
@@ -183,7 +196,11 @@ export default function Home() {
                     15 quiz
                   </span>
                 </div>
-                <Button variant="outline" className="w-full btn-glass">
+                <Button 
+                  variant="outline" 
+                  className="w-full btn-glass"
+                  onClick={() => navigate('/modules')}
+                >
                   Commencer le Module
                 </Button>
               </CardContent>
@@ -193,9 +210,9 @@ export default function Home() {
       </section>
 
       {/* Progress Section */}
-      <section className="py-16 px-6">
+      <section className="py-8 md:py-16 px-4 md:px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12 text-glow-accent">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 text-glow-accent">
             Votre Parcours d'Apprentissage
           </h2>
           
@@ -254,7 +271,10 @@ export default function Home() {
               </div>
 
               <div className="mt-8 flex justify-center">
-                <Button className="btn-matrix">
+                <Button 
+                  className="btn-matrix"
+                  onClick={() => navigate('/modules')}
+                >
                   Continuer l'Apprentissage
                 </Button>
               </div>
