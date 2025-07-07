@@ -80,6 +80,7 @@ All colors MUST be HSL.
   --sidebar-accent-foreground: 120 80% 90%;
   --sidebar-border: 120 30% 20%;
   --sidebar-ring: 120 100% 50%;
+  }
 }
 
 /* Custom Components & Utilities */
