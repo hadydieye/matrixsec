@@ -11,22 +11,22 @@ export function Layout({ children }: LayoutProps) {
   const isMobile = useIsMobile();
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           {/* Header with Trigger */}
-          <header className="h-16 flex items-center border-b border-border bg-card/50 backdrop-blur-xl px-4 lg:px-6">
+          <header className="h-12 md:h-16 flex items-center border-b border-border bg-card/50 backdrop-blur-xl px-2 md:px-4 lg:px-6 shrink-0">
             <SidebarTrigger className="text-primary hover:text-primary-glow transition-colors" />
             
-            <div className="ml-4 flex items-center space-x-2">
-              <div className="w-2 h-2 bg-primary rounded-full animate-glow-pulse"></div>
-              <h1 className="text-xl font-bold text-glow-primary">MatrixSec</h1>
+            <div className="ml-2 md:ml-4 flex items-center space-x-1 md:space-x-2">
+              <div className="w-1.5 md:w-2 h-1.5 md:h-2 bg-primary rounded-full animate-glow-pulse"></div>
+              <h1 className="text-base md:text-xl font-bold text-glow-primary">MatrixSec</h1>
             </div>
 
-            <div className="ml-auto flex items-center space-x-2">
-              <div className="text-sm text-muted-foreground">
+            <div className="ml-auto hidden md:flex items-center space-x-2">
+              <div className="text-xs md:text-sm text-muted-foreground">
                 Cybersecurity Learning Platform
               </div>
             </div>

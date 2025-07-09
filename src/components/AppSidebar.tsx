@@ -20,12 +20,6 @@ const mainItems = [
   { title: "Profil", url: "/profile", icon: User },
 ];
 
-const moduleCategories = [
-  { title: "Hacking Éthique", url: "/modules", icon: Shield },
-  { title: "Red Teaming", url: "/modules", icon: Zap },
-  { title: "Blue Teaming", url: "/modules", icon: Brain },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
@@ -39,49 +33,25 @@ export function AppSidebar() {
       : "text-muted-foreground hover:text-primary hover:bg-muted/50 transition-all duration-300";
 
   return (
-    <Sidebar className={`border-r border-border bg-card/30 backdrop-blur-xl ${collapsed ? "w-16" : "w-64"}`}>
+    <Sidebar className={`border-r border-border bg-card/30 backdrop-blur-xl ${collapsed ? "w-12 md:w-16" : "w-64 md:w-72"}`}>
       <SidebarContent className="bg-transparent">
         {/* Main Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-primary text-glow-primary px-4 py-2 text-xs font-semibold uppercase tracking-wider">
+          <SidebarGroupLabel className="text-primary text-glow-primary px-2 md:px-4 py-2 text-xs font-semibold uppercase tracking-wider">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-12">
+                  <SidebarMenuButton asChild className="h-10 md:h-12">
                     <NavLink 
                       to={item.url} 
                       end={item.url === "/"} 
                       className={getNavCls}
                     >
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      {!collapsed && <span className="ml-3">{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Module Categories */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-accent text-glow-accent px-4 py-2 text-xs font-semibold uppercase tracking-wider">
-            Domaines
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {moduleCategories.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-12">
-                    <NavLink 
-                      to={item.url} 
-                      className={getNavCls}
-                    >
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      {!collapsed && <span className="ml-3 text-sm">{item.title}</span>}
+                      <item.icon className="h-4 md:h-5 w-4 md:w-5 shrink-0" />
+                      {!collapsed && <span className="ml-2 md:ml-3 text-sm md:text-base">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
