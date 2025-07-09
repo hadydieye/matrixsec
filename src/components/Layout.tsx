@@ -1,6 +1,9 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 import { ReactNode } from "react";
 
 interface LayoutProps {
@@ -9,6 +12,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const isMobile = useIsMobile();
+  const { signOut, profile } = useAuth();
 
   return (
     <SidebarProvider defaultOpen={!isMobile}>
@@ -25,10 +29,21 @@ export function Layout({ children }: LayoutProps) {
               <h1 className="text-base md:text-xl font-bold text-glow-primary">MatrixSec</h1>
             </div>
 
-            <div className="ml-auto hidden md:flex items-center space-x-2">
-              <div className="text-xs md:text-sm text-muted-foreground">
-                Cybersecurity Learning Platform
+            <div className="ml-auto flex items-center space-x-2 md:space-x-4">
+              <div className="hidden md:flex items-center space-x-2">
+                <div className="text-xs md:text-sm text-muted-foreground">
+                  Bienvenue, {profile?.username || 'Utilisateur'}
+                </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={signOut}
+                className="btn-glass text-xs md:text-sm"
+              >
+                <LogOut className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">Déconnexion</span>
+              </Button>
             </div>
           </header>
           
