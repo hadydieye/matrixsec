@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          badge_type: Database["public"]["Enums"]["badge_type"]
+          condition_data: Json | null
+          created_at: string
+          description: string
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          points_reward: number | null
+        }
+        Insert: {
+          badge_type: Database["public"]["Enums"]["badge_type"]
+          condition_data?: Json | null
+          created_at?: string
+          description: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          points_reward?: number | null
+        }
+        Update: {
+          badge_type?: Database["public"]["Enums"]["badge_type"]
+          condition_data?: Json | null
+          created_at?: string
+          description?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          points_reward?: number | null
+        }
+        Relationships: []
+      }
+      modules: {
+        Row: {
+          category: Database["public"]["Enums"]["module_category"]
+          content: string | null
+          created_at: string
+          description: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          estimated_duration_minutes: number | null
+          id: string
+          is_published: boolean | null
+          order_index: number
+          prerequisites: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["module_category"]
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_published?: boolean | null
+          order_index?: number
+          prerequisites?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["module_category"]
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_published?: boolean | null
+          order_index?: number
+          prerequisites?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -59,6 +140,170 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz: {
+        Row: {
+          correct_answer: number
+          created_at: string
+          explanation: string | null
+          id: string
+          module_id: string
+          options: Json
+          order_index: number
+          points: number | null
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          correct_answer: number
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          module_id: string
+          options: Json
+          order_index?: number
+          points?: number | null
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          correct_answer?: number
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          module_id?: string
+          options?: Json
+          order_index?: number
+          points?: number | null
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          module_id: string
+          progress_percentage: number | null
+          quiz_attempts: number | null
+          quiz_score: number | null
+          status: string
+          time_spent_minutes: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          module_id: string
+          progress_percentage?: number | null
+          quiz_attempts?: number | null
+          quiz_score?: number | null
+          status?: string
+          time_spent_minutes?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          module_id?: string
+          progress_percentage?: number | null
+          quiz_attempts?: number | null
+          quiz_score?: number | null
+          status?: string
+          time_spent_minutes?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_quiz_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          is_correct: boolean
+          points_earned: number | null
+          quiz_id: string
+          selected_answer: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_correct: boolean
+          points_earned?: number | null
+          quiz_id: string
+          selected_answer: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          points_earned?: number | null
+          quiz_id?: string
+          selected_answer?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quiz"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -95,6 +340,16 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      badge_type: "completion" | "streak" | "performance" | "special"
+      difficulty_level: "beginner" | "intermediate" | "advanced" | "expert"
+      module_category:
+        | "basics"
+        | "network"
+        | "web"
+        | "mobile"
+        | "forensics"
+        | "cryptography"
+        | "social_engineering"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -223,6 +478,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      badge_type: ["completion", "streak", "performance", "special"],
+      difficulty_level: ["beginner", "intermediate", "advanced", "expert"],
+      module_category: [
+        "basics",
+        "network",
+        "web",
+        "mobile",
+        "forensics",
+        "cryptography",
+        "social_engineering",
+      ],
     },
   },
 } as const
