@@ -1,359 +1,322 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Target, Trophy, Clock, Star, Play, RotateCcw, CheckCircle } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { CheckCircle, XCircle, Clock, Award, ArrowLeft } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { Tables } from '@/integrations/supabase/types';
 
-const quizData = [
-  {
-    id: 1,
-    title: "Bases du Hacking Éthique",
-    category: "Hacking Éthique",
-    categoryColor: "primary",
-    questions: 15,
-    duration: "20 min",
-    difficulty: "Débutant",
-    score: 87,
-    completed: true,
-    rating: 4.8
-  },
-  {
-    id: 2,
-    title: "Configuration Lab de Pentest",
-    category: "Hacking Éthique", 
-    categoryColor: "primary",
-    questions: 12,
-    duration: "15 min",
-    difficulty: "Débutant",
-    score: 92,
-    completed: true,
-    rating: 4.7
-  },
-  {
-    id: 3,
-    title: "Techniques Red Team Avancées",
-    category: "Red Teaming",
-    categoryColor: "secondary",
-    questions: 25,
-    duration: "35 min",
-    difficulty: "Avancé",
-    score: null,
-    completed: false,
-    rating: 4.9
-  },
-  {
-    id: 4,
-    title: "SIEM et Détection d'Intrusions",
-    category: "Blue Teaming",
-    categoryColor: "accent",
-    questions: 18,
-    duration: "25 min",
-    difficulty: "Intermédiaire",
-    score: 78,
-    completed: true,
-    rating: 4.6
-  },
-  {
-    id: 5,
-    title: "Phishing et Social Engineering",
-    category: "Red Teaming",
-    categoryColor: "secondary",
-    questions: 20,
-    duration: "30 min",
-    difficulty: "Intermédiaire",
-    score: null,
-    completed: false,
-    rating: 4.8
-  },
-  {
-    id: 6,
-    title: "Réponse aux Incidents",
-    category: "Blue Teaming",
-    categoryColor: "accent",
-    questions: 22,
-    duration: "30 min",
-    difficulty: "Avancé",
-    score: null,
-    completed: false,
-    rating: 4.7
-  }
-];
-
-const stats = {
-  totalQuizzes: 47,
-  completedQuizzes: 28,
-  averageScore: 84,
-  totalTime: "12h 30min",
-  badges: 8,
-  streak: 7
-};
+type Quiz = Tables<'quiz'>;
+type Module = Tables<'modules'>;
 
 export default function Quiz() {
-  const [selectedTab, setSelectedTab] = useState("available");
+  const { moduleId } = useParams<{ moduleId: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Débutant": return "bg-primary/20 text-primary border-primary/30";
-      case "Intermédiaire": return "bg-secondary/20 text-secondary border-secondary/30";
-      case "Avancé": return "bg-accent/20 text-accent border-accent/30";
-      default: return "bg-muted/20 text-muted-foreground border-muted/30";
+  const [module, setModule] = useState<Module | null>(null);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [userAnswers, setUserAnswers] = useState<{ questionId: string; answer: number; isCorrect: boolean }[]>([]);
+  const [showResult, setShowResult] = useState(false);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!moduleId || !user) return;
+
+    const fetchModuleAndQuiz = async () => {
+      try {
+        // Fetch module details
+        const { data: moduleData, error: moduleError } = await supabase
+          .from('modules')
+          .select('*')
+          .eq('id', moduleId)
+          .single();
+
+        if (moduleError) throw moduleError;
+        setModule(moduleData);
+
+        // Fetch quiz questions for this module
+        const { data: quizData, error: quizError } = await supabase
+          .from('quiz')
+          .select('*')
+          .eq('module_id', moduleId)
+          .order('order_index');
+
+        if (quizError) throw quizError;
+        setQuizzes(quizData || []);
+
+      } catch (error) {
+        console.error('Error fetching quiz:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger le quiz.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModuleAndQuiz();
+  }, [moduleId, user]);
+
+  const currentQuestion = quizzes[currentQuestionIndex];
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    setSelectedAnswer(answerIndex);
+  };
+
+  const handleNextQuestion = async () => {
+    if (selectedAnswer === null || !currentQuestion || !user) return;
+
+    const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+
+    // Record the answer
+    try {
+      await supabase
+        .from('user_quiz_attempts')
+        .insert({
+          user_id: user.id,
+          quiz_id: currentQuestion.id,
+          selected_answer: selectedAnswer,
+          is_correct: isCorrect,
+          points_earned: isCorrect ? (currentQuestion.points || 10) : 0
+        });
+    } catch (error) {
+      console.error('Error recording quiz attempt:', error);
+    }
+
+    // Store answer locally
+    setUserAnswers(prev => [...prev, {
+      questionId: currentQuestion.id,
+      answer: selectedAnswer,
+      isCorrect
+    }]);
+
+    setShowResult(true);
+
+    // Auto-advance after showing result
+    setTimeout(() => {
+      if (currentQuestionIndex < quizzes.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+        setSelectedAnswer(null);
+        setShowResult(false);
+      } else {
+        completeQuiz();
+      }
+    }, 2000);
+  };
+
+  const completeQuiz = async () => {
+    if (!user || !moduleId) return;
+
+    const correctAnswers = userAnswers.filter(a => a.isCorrect).length;
+    const totalQuestions = quizzes.length;
+    const score = Math.round((correctAnswers / totalQuestions) * 100);
+    const totalPoints = userAnswers.reduce((sum, answer) => 
+      sum + (answer.isCorrect ? 10 : 0), 0
+    );
+
+    try {
+      // Update user progress
+      await supabase
+        .from('user_progress')
+        .upsert({
+          user_id: user.id,
+          module_id: moduleId,
+          status: 'completed',
+          progress_percentage: 100,
+          quiz_score: totalPoints,
+          quiz_attempts: 1,
+          completed_at: new Date().toISOString()
+        });
+
+      setQuizCompleted(true);
+      
+      toast({
+        title: "Quiz terminé !",
+        description: `Vous avez obtenu ${score}% (${correctAnswers}/${totalQuestions} bonnes réponses)`
+      });
+
+    } catch (error) {
+      console.error('Error completing quiz:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer votre score.",
+        variant: "destructive"
+      });
     }
   };
 
-  const getCategoryColor = (color: string) => {
-    switch (color) {
-      case "primary": return "text-primary border-primary";
-      case "secondary": return "text-secondary border-secondary";
-      case "accent": return "text-accent border-accent";
-      default: return "text-primary border-primary";
-    }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return "text-primary text-glow-primary";
-    if (score >= 75) return "text-secondary text-glow-secondary";
-    return "text-accent text-glow-accent";
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-dark p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-4 text-glow-primary">Quiz Interactifs</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl">
-            Testez vos connaissances avec nos quiz interactifs et suivez votre progression en temps réel.
-          </p>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement du quiz...</p>
         </div>
+      </div>
+    );
+  }
 
-        {/* Stats Overview */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-          <Card className="glass-card">
-            <CardContent className="p-4 text-center">
-              <Target className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-primary text-glow-primary">{stats.totalQuizzes}</div>
-              <div className="text-xs text-muted-foreground">Quiz Total</div>
-            </CardContent>
-          </Card>
+  if (quizzes.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
+        <Card className="glass-card max-w-md w-full mx-4">
+          <CardContent className="text-center py-8">
+            <XCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">Aucun quiz disponible</h2>
+            <p className="text-muted-foreground mb-4">
+              Ce module n'a pas encore de quiz associé.
+            </p>
+            <Button onClick={() => navigate('/modules')} className="btn-matrix">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour aux modules
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-          <Card className="glass-card">
-            <CardContent className="p-4 text-center">
-              <CheckCircle className="h-8 w-8 text-secondary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-secondary text-glow-secondary">{stats.completedQuizzes}</div>
-              <div className="text-xs text-muted-foreground">Terminés</div>
-            </CardContent>
-          </Card>
+  if (quizCompleted) {
+    const correctAnswers = userAnswers.filter(a => a.isCorrect).length;
+    const score = Math.round((correctAnswers / quizzes.length) * 100);
 
-          <Card className="glass-card">
-            <CardContent className="p-4 text-center">
-              <Star className="h-8 w-8 text-accent mx-auto mb-2" />
-              <div className="text-2xl font-bold text-accent text-glow-accent">{stats.averageScore}%</div>
-              <div className="text-xs text-muted-foreground">Score Moyen</div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card">
-            <CardContent className="p-4 text-center">
-              <Clock className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-primary text-glow-primary">{stats.totalTime}</div>
-              <div className="text-xs text-muted-foreground">Temps Total</div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card">
-            <CardContent className="p-4 text-center">
-              <Trophy className="h-8 w-8 text-secondary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-secondary text-glow-secondary">{stats.badges}</div>
-              <div className="text-xs text-muted-foreground">Badges</div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass-card">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-accent text-glow-accent">{stats.streak}</div>
-              <div className="text-xs text-muted-foreground">Jours de Suite</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Progress Bar */}
-        <Card className="glass-card mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Progression Globale</span>
-              <span className="text-primary text-glow-primary">{Math.round((stats.completedQuizzes / stats.totalQuizzes) * 100)}%</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Progress 
-              value={(stats.completedQuizzes / stats.totalQuizzes) * 100} 
-              className="h-3 bg-muted"
-            />
-            <div className="flex justify-between text-sm text-muted-foreground mt-2">
-              <span>{stats.completedQuizzes} quiz terminés</span>
-              <span>{stats.totalQuizzes - stats.completedQuizzes} restants</span>
+    return (
+      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
+        <Card className="glass-card max-w-lg w-full mx-4">
+          <CardContent className="text-center py-8">
+            <Award className="h-16 w-16 text-accent mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Quiz terminé !</h2>
+            <p className="text-lg mb-4">
+              Module: <span className="text-primary">{module?.title}</span>
+            </p>
+            <div className="bg-card/50 rounded-lg p-4 mb-6">
+              <div className="text-3xl font-bold text-accent mb-2">{score}%</div>
+              <div className="text-muted-foreground">
+                {correctAnswers} bonnes réponses sur {quizzes.length}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Button onClick={() => navigate('/modules')} className="btn-matrix w-full">
+                Retour aux modules
+              </Button>
+              <Button 
+                onClick={() => navigate('/progress')} 
+                variant="outline" 
+                className="btn-glass w-full"
+              >
+                Voir mes progrès
+              </Button>
             </div>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
 
-        {/* Quiz Tabs */}
-        <Tabs defaultValue="available" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8 bg-card/30 backdrop-blur-xl">
-            <TabsTrigger value="available" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
-              Quiz Disponibles
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="data-[state=active]:bg-secondary/20 data-[state=active]:text-secondary">
-              Terminés
-            </TabsTrigger>
-            <TabsTrigger value="recommended" className="data-[state=active]:bg-accent/20 data-[state=active]:text-accent">
-              Recommandés
-            </TabsTrigger>
-          </TabsList>
+  return (
+    <div className="min-h-screen bg-gradient-dark p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <Button 
+            onClick={() => navigate('/modules')} 
+            variant="outline" 
+            className="btn-glass mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
+          
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-glow-primary">{module?.title}</h1>
+              <p className="text-muted-foreground">Quiz de validation</p>
+            </div>
+            <Badge className="bg-primary/20 text-primary border-primary/30">
+              Question {currentQuestionIndex + 1} / {quizzes.length}
+            </Badge>
+          </div>
 
-          {/* Available Quizzes */}
-          <TabsContent value="available">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {quizData.filter(quiz => !quiz.completed).map((quiz) => (
-                <Card key={quiz.id} className="glass-card hover-glow group">
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge className={`${getCategoryColor(quiz.categoryColor)} bg-transparent`}>
-                        {quiz.category}
-                      </Badge>
-                      <div className="flex items-center space-x-1 text-accent">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="text-sm font-medium">{quiz.rating}</span>
-                      </div>
-                    </div>
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                      {quiz.title}
-                    </CardTitle>
-                    <CardDescription>
-                      <Badge className={getDifficultyColor(quiz.difficulty)}>
-                        {quiz.difficulty}
-                      </Badge>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                      <span className="flex items-center">
-                        <Target className="h-4 w-4 mr-1" />
-                        {quiz.questions} questions
+          <Progress 
+            value={((currentQuestionIndex + 1) / quizzes.length) * 100} 
+            className="h-2 mb-6"
+          />
+        </div>
+
+        {/* Question Card */}
+        <Card className="glass-card mb-6">
+          <CardHeader>
+            <CardTitle className="text-xl">
+              {currentQuestion?.question}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {(currentQuestion?.options as string[])?.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleAnswerSelect(index)}
+                  disabled={showResult}
+                  className={`w-full p-4 text-left rounded-lg border transition-all ${
+                    selectedAnswer === index
+                      ? showResult
+                        ? index === currentQuestion.correct_answer
+                          ? 'bg-green-500/20 border-green-500 text-green-200'
+                          : 'bg-red-500/20 border-red-500 text-red-200'
+                        : 'bg-primary/20 border-primary text-primary'
+                      : showResult && index === currentQuestion.correct_answer
+                        ? 'bg-green-500/20 border-green-500 text-green-200'
+                        : 'bg-card/50 border-border hover:bg-card/80'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <span className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center text-sm font-medium mr-3">
+                      {String.fromCharCode(65 + index)}
+                    </span>
+                    {option}
+                    {showResult && selectedAnswer === index && (
+                      <span className="ml-auto">
+                        {index === currentQuestion.correct_answer ? (
+                          <CheckCircle className="h-5 w-5 text-green-400" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-400" />
+                        )}
                       </span>
-                      <span className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {quiz.duration}
-                      </span>
-                    </div>
-                    <Button className="w-full btn-matrix">
-                      <Play className="h-4 w-4 mr-2" />
-                      Commencer le Quiz
-                    </Button>
-                  </CardContent>
-                </Card>
+                    )}
+                  </div>
+                </button>
               ))}
             </div>
-          </TabsContent>
 
-          {/* Completed Quizzes */}
-          <TabsContent value="completed">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {quizData.filter(quiz => quiz.completed).map((quiz) => (
-                <Card key={quiz.id} className="glass-card hover-glow group">
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge className={`${getCategoryColor(quiz.categoryColor)} bg-transparent`}>
-                        {quiz.category}
-                      </Badge>
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="h-4 w-4 text-primary" />
-                        <span className={`text-lg font-bold ${getScoreColor(quiz.score!)}`}>
-                          {quiz.score}%
-                        </span>
-                      </div>
-                    </div>
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                      {quiz.title}
-                    </CardTitle>
-                    <CardDescription>
-                      <Badge className={getDifficultyColor(quiz.difficulty)}>
-                        {quiz.difficulty}
-                      </Badge>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                      <span className="flex items-center">
-                        <Target className="h-4 w-4 mr-1" />
-                        {quiz.questions} questions
-                      </span>
-                      <span className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {quiz.duration}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1 btn-glass">
-                        <RotateCcw className="h-4 w-4 mr-2" />
-                        Refaire
-                      </Button>
-                      <Button variant="outline" className="btn-glass">
-                        Résultats
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+            {showResult && currentQuestion?.explanation && (
+              <div className="mt-6 p-4 bg-card/50 rounded-lg border border-border">
+                <h4 className="font-medium mb-2 text-accent">Explication :</h4>
+                <p className="text-muted-foreground">{currentQuestion.explanation}</p>
+              </div>
+            )}
 
-          {/* Recommended Quizzes */}
-          <TabsContent value="recommended">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {quizData.slice(0, 3).map((quiz) => (
-                <Card key={quiz.id} className="glass-card hover-glow group border-primary/50">
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge className="bg-primary/20 text-primary border-primary/30">
-                        Recommandé
-                      </Badge>
-                      <div className="flex items-center space-x-1 text-accent">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="text-sm font-medium">{quiz.rating}</span>
-                      </div>
-                    </div>
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                      {quiz.title}
-                    </CardTitle>
-                    <CardDescription>
-                      <Badge className={getDifficultyColor(quiz.difficulty)}>
-                        {quiz.difficulty}
-                      </Badge>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                      <span className="flex items-center">
-                        <Target className="h-4 w-4 mr-1" />
-                        {quiz.questions} questions
-                      </span>
-                      <span className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {quiz.duration}
-                      </span>
-                    </div>
-                    <Button className="w-full btn-matrix">
-                      <Play className="h-4 w-4 mr-2" />
-                      Commencer le Quiz
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+            {!showResult && (
+              <Button 
+                onClick={handleNextQuestion}
+                disabled={selectedAnswer === null}
+                className="btn-matrix w-full mt-6"
+              >
+                {currentQuestionIndex < quizzes.length - 1 ? 'Question suivante' : 'Terminer le quiz'}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

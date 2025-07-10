@@ -1,72 +1,165 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Zap, Brain, Search, Clock, Target, Star, Filter } from "lucide-react";
+import { Clock, Users, Filter, Star, ShieldCheck, Target, Eye, Search, Loader2, Shield, Zap, Brain } from "lucide-react";
+import { useModules } from "@/hooks/useModules";
+import { useUserProgress } from "@/hooks/useUserProgress";
+import { useToast } from "@/hooks/use-toast";
 
-const moduleData = {
-  "hacking-ethique": {
+// Category mapping for better organization
+const categoryInfo = {
+  "basics": {
     title: "Hacking Éthique",
     icon: Shield,
     color: "primary",
-    description: "Apprentissage des techniques offensives pour mieux comprendre les vulnérabilités",
-    modules: [
-      { id: 1, title: "Introduction au Hacking Éthique", duration: "45min", quizzes: 8, difficulty: "Débutant", rating: 4.9 },
-      { id: 2, title: "Configuration du Lab", duration: "1h 30min", quizzes: 12, difficulty: "Débutant", rating: 4.8 },
-      { id: 3, title: "Maîtrise de Linux", duration: "2h 15min", quizzes: 15, difficulty: "Intermédiaire", rating: 4.7 },
-      { id: 4, title: "Anonymat et Sécurité", duration: "1h 45min", quizzes: 10, difficulty: "Intermédiaire", rating: 4.9 },
-      { id: 5, title: "Analyse Réseau", duration: "3h", quizzes: 20, difficulty: "Avancé", rating: 4.8 },
-    ]
+    description: "Apprentissage des techniques offensives pour mieux comprendre les vulnérabilités"
   },
-  "redteaming": {
-    title: "Red Teaming",
+  "network": {
+    title: "Red Teaming", 
     icon: Zap,
     color: "secondary",
-    description: "Simulation d'attaques avancées et techniques de pentest professionnel",
-    modules: [
-      { id: 1, title: "Introduction au Red Teaming", duration: "1h", quizzes: 10, difficulty: "Intermédiaire", rating: 4.8 },
-      { id: 2, title: "Environnement d'Attaque", duration: "2h", quizzes: 15, difficulty: "Intermédiaire", rating: 4.7 },
-      { id: 3, title: "Pentest Web Avancé", duration: "4h", quizzes: 25, difficulty: "Avancé", rating: 4.9 },
-      { id: 4, title: "Attaques Réseau", duration: "3h 30min", quizzes: 22, difficulty: "Avancé", rating: 4.8 },
-    ]
+    description: "Simulation d'attaques avancées et techniques de pentest professionnel"
   },
-  "blueteaming": {
+  "web": {
+    title: "Blue Teaming",
+    icon: Brain,
+    color: "accent", 
+    description: "Défense proactive, détection d'intrusions et réponse aux incidents"
+  },
+  "forensics": {
     title: "Blue Teaming",
     icon: Brain,
     color: "accent",
-    description: "Défense proactive, détection d'intrusions et réponse aux incidents",
-    modules: [
-      { id: 1, title: "Introduction au Blue Teaming", duration: "1h 15min", quizzes: 12, difficulty: "Débutant", rating: 4.7 },
-      { id: 2, title: "Analyse des Menaces", duration: "2h 30min", quizzes: 18, difficulty: "Intermédiaire", rating: 4.8 },
-      { id: 3, title: "Frameworks de Sécurité", duration: "2h", quizzes: 16, difficulty: "Intermédiaire", rating: 4.6 },
-      { id: 4, title: "Configuration SIEM", duration: "3h 45min", quizzes: 24, difficulty: "Avancé", rating: 4.9 },
-    ]
+    description: "Défense proactive, détection d'intrusions et réponse aux incidents"
+  },
+  "social_engineering": {
+    title: "Red Teaming",
+    icon: Zap,
+    color: "secondary",
+    description: "Simulation d'attaques avancées et techniques de pentest professionnel"
+  },
+  "cryptography": {
+    title: "Hacking Éthique",
+    icon: Shield,
+    color: "primary",
+    description: "Apprentissage des techniques offensives pour mieux comprendre les vulnérabilités"
+  },
+  "mobile": {
+    title: "Hacking Éthique",
+    icon: Shield,
+    color: "primary",
+    description: "Apprentissage des techniques offensives pour mieux comprendre les vulnérabilités"
   }
 };
 
-export default function Modules() {
+function Modules() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const navigate = useNavigate();
+  
+  const { modules, loading, error } = useModules();
+  const { getModuleProgress, startModule } = useUserProgress();
+  const { toast } = useToast();
+
+  // Group modules by category
+  const modulesByCategory = useMemo(() => {
+    const grouped: Record<string, any[]> = {};
+    
+    modules.forEach(module => {
+      const category = module.category;
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push(module);
+    });
+    
+    return grouped;
+  }, [modules]);
+
+  // Filter modules based on search and category
+  const filteredModules = useMemo(() => {
+    let filtered = modules;
+    
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(module => module.category === selectedCategory);
+    }
+    
+    if (searchTerm) {
+      filtered = filtered.filter(module =>
+        module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        module.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  }, [modules, selectedCategory, searchTerm]);
 
   const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Débutant": return "bg-primary/20 text-primary border-primary/30";
-      case "Intermédiaire": return "bg-secondary/20 text-secondary border-secondary/30";
-      case "Avancé": return "bg-accent/20 text-accent border-accent/30";
-      default: return "bg-muted/20 text-muted-foreground border-muted/30";
+    switch (difficulty.toLowerCase()) {
+      case "beginner":
+        return "bg-primary/20 text-primary border-primary/30";
+      case "intermediate":
+        return "bg-secondary/20 text-secondary border-secondary/30";
+      case "advanced":
+        return "bg-accent/20 text-accent border-accent/30";
+      case "expert":
+        return "bg-destructive/20 text-destructive border-destructive/30";
+      default:
+        return "bg-muted/20 text-muted-foreground border-muted/30";
     }
   };
 
   const getColorClasses = (color: string) => {
     switch (color) {
-      case "primary": return "text-primary text-glow-primary border-primary glow-primary";
-      case "secondary": return "text-secondary text-glow-secondary border-secondary glow-secondary";
-      case "accent": return "text-accent text-glow-accent border-accent glow-accent";
-      default: return "text-primary text-glow-primary border-primary glow-primary";
+      case "primary":
+        return "text-primary text-glow-primary border-primary glow-primary";
+      case "secondary":
+        return "text-secondary text-glow-secondary border-secondary glow-secondary";
+      case "accent":
+        return "text-accent text-glow-accent border-accent glow-accent";
+      default:
+        return "text-primary text-glow-primary border-primary glow-primary";
     }
   };
+
+  const handleStartModule = async (moduleId: string) => {
+    try {
+      await startModule(moduleId);
+      toast({
+        title: "Module démarré",
+        description: "Votre progression a été enregistrée."
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de démarrer le module.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-destructive">Erreur</h2>
+          <p className="text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-dark p-4 md:p-6">
@@ -97,127 +190,183 @@ export default function Modules() {
         </div>
 
         {/* Category Tabs */}
-        <Tabs defaultValue="all" className="w-full">
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 md:mb-8 bg-card/30 backdrop-blur-xl">
             <TabsTrigger value="all" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs md:text-sm">
               Tous
             </TabsTrigger>
-            <TabsTrigger value="hacking-ethique" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs md:text-sm">
-              Hacking
+            <TabsTrigger value="basics" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary text-xs md:text-sm">
+              Basics
             </TabsTrigger>
-            <TabsTrigger value="redteaming" className="data-[state=active]:bg-secondary/20 data-[state=active]:text-secondary text-xs md:text-sm">
-              Red Team
+            <TabsTrigger value="network" className="data-[state=active]:bg-secondary/20 data-[state=active]:text-secondary text-xs md:text-sm">
+              Network
             </TabsTrigger>
-            <TabsTrigger value="blueteaming" className="data-[state=active]:bg-accent/20 data-[state=active]:text-accent text-xs md:text-sm">
-              Blue Team
+            <TabsTrigger value="web" className="data-[state=active]:bg-accent/20 data-[state=active]:text-accent text-xs md:text-sm">
+              Web
             </TabsTrigger>
           </TabsList>
 
           {/* All Modules */}
           <TabsContent value="all" className="space-y-8">
-            {Object.entries(moduleData).map(([key, category]) => (
-              <div key={key} className="space-y-6">
-                <div className="flex items-center space-x-4">
-                  <category.icon className={`h-8 w-8 ${getColorClasses(category.color)}`} />
-                  <div>
-                    <h2 className={`text-2xl font-bold ${getColorClasses(category.color)}`}>
-                      {category.title}
-                    </h2>
-                    <p className="text-muted-foreground">{category.description}</p>
+            {Object.entries(modulesByCategory).map(([categoryKey, categoryModules]) => {
+              const categoryConfig = categoryInfo[categoryKey as keyof typeof categoryInfo] || categoryInfo.basics;
+              
+              return (
+                <div key={categoryKey} className="space-y-6">
+                  <div className="flex items-center space-x-4">
+                    <categoryConfig.icon className={`h-8 w-8 ${getColorClasses(categoryConfig.color)}`} />
+                    <div>
+                      <h2 className={`text-2xl font-bold ${getColorClasses(categoryConfig.color)}`}>
+                        {categoryConfig.title}
+                      </h2>
+                      <p className="text-muted-foreground">{categoryConfig.description}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    {categoryModules
+                      .filter(module =>
+                        module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (module.description && module.description.toLowerCase().includes(searchTerm.toLowerCase()))
+                      )
+                      .map((module) => {
+                        const progress = getModuleProgress(module.id);
+                        const isStarted = progress?.status !== undefined && progress?.status !== 'not_started';
+                        
+                        return (
+                          <Card key={module.id} className="glass-card hover-glow group">
+                            <CardHeader>
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge className={getDifficultyColor(module.difficulty)}>
+                                  {module.difficulty}
+                                </Badge>
+                                {isStarted && (
+                                  <Badge variant="outline" className="bg-blue-50/10 text-blue-300 border-blue-300/30">
+                                    {progress?.status === 'completed' ? 'Terminé' : 'En cours'}
+                                  </Badge>
+                                )}
+                              </div>
+                              <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                                {module.title}
+                              </CardTitle>
+                              {module.description && (
+                                <CardDescription className="text-sm text-muted-foreground">
+                                  {module.description}
+                                </CardDescription>
+                              )}
+                            </CardHeader>
+                            <CardContent>
+                              <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                                <span className="flex items-center">
+                                  <Clock className="h-4 w-4 mr-1" />
+                                  {module.estimated_duration_minutes}min
+                                </span>
+                                {progress?.progress_percentage !== undefined && (
+                                  <span>
+                                    {progress.progress_percentage}% complété
+                                  </span>
+                                )}
+                              </div>
+                              <Button 
+                                className={`w-full ${categoryConfig.color === 'primary' ? 'btn-matrix' : categoryConfig.color === 'secondary' ? 'btn-cyber' : 'btn-glass'}`}
+                                onClick={() => navigate(`/quiz/${module.id}`)}
+                              >
+                                {isStarted ? 'Continuer le Quiz' : 'Commencer'}
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                  {category.modules.map((module) => (
-                    <Card key={module.id} className="glass-card hover-glow group">
-                      <CardHeader>
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge className={getDifficultyColor(module.difficulty)}>
-                            {module.difficulty}
-                          </Badge>
-                          <div className="flex items-center space-x-1 text-accent">
-                            <Star className="h-4 w-4 fill-current" />
-                            <span className="text-sm font-medium">{module.rating}</span>
-                          </div>
-                        </div>
-                        <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                          {module.title}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                          <span className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {module.duration}
-                          </span>
-                          <span className="flex items-center">
-                            <Target className="h-4 w-4 mr-1" />
-                            {module.quizzes} quiz
-                          </span>
-                        </div>
-                        <Button className="w-full btn-matrix">
-                          Commencer
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </TabsContent>
 
           {/* Individual Category Tabs */}
-          {Object.entries(moduleData).map(([key, category]) => (
-            <TabsContent key={key} value={key} className="space-y-6">
-              <div className="text-center mb-8">
-                <category.icon className={`h-16 w-16 mx-auto mb-4 ${getColorClasses(category.color)}`} />
-                <h2 className={`text-3xl font-bold mb-2 ${getColorClasses(category.color)}`}>
-                  {category.title}
-                </h2>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  {category.description}
-                </p>
-              </div>
+          {Object.entries(modulesByCategory).map(([categoryKey, categoryModules]) => {
+            const categoryConfig = categoryInfo[categoryKey as keyof typeof categoryInfo] || categoryInfo.basics;
+            
+            return (
+              <TabsContent key={categoryKey} value={categoryKey} className="space-y-6">
+                <div className="text-center mb-8">
+                  <categoryConfig.icon className={`h-16 w-16 mx-auto mb-4 ${getColorClasses(categoryConfig.color)}`} />
+                  <h2 className={`text-3xl font-bold mb-2 ${getColorClasses(categoryConfig.color)}`}>
+                    {categoryConfig.title}
+                  </h2>
+                  <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                    {categoryConfig.description}
+                  </p>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {category.modules.map((module) => (
-                  <Card key={module.id} className="glass-card hover-glow group">
-                    <CardHeader>
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge className={getDifficultyColor(module.difficulty)}>
-                          {module.difficulty}
-                        </Badge>
-                        <div className="flex items-center space-x-1 text-accent">
-                          <Star className="h-4 w-4 fill-current" />
-                          <span className="text-sm font-medium">{module.rating}</span>
-                        </div>
-                      </div>
-                      <CardTitle className={`text-lg group-hover:${category.color === 'primary' ? 'text-primary' : category.color === 'secondary' ? 'text-secondary' : 'text-accent'} transition-colors`}>
-                        {module.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                        <span className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {module.duration}
-                        </span>
-                        <span className="flex items-center">
-                          <Target className="h-4 w-4 mr-1" />
-                          {module.quizzes} quiz
-                        </span>
-                      </div>
-                      <Button className={`w-full ${category.color === 'primary' ? 'btn-matrix' : category.color === 'secondary' ? 'btn-cyber' : 'btn-glass'}`}>
-                        Commencer
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {categoryModules
+                    .filter(module =>
+                      module.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (module.description && module.description.toLowerCase().includes(searchTerm.toLowerCase()))
+                    )
+                    .map((module) => {
+                      const progress = getModuleProgress(module.id);
+                      const isStarted = progress?.status !== undefined && progress?.status !== 'not_started';
+                      
+                      return (
+                        <Card key={module.id} className="glass-card hover-glow group">
+                          <CardHeader>
+                            <div className="flex items-center justify-between mb-2">
+                              <Badge className={getDifficultyColor(module.difficulty)}>
+                                {module.difficulty}
+                              </Badge>
+                              {isStarted && (
+                                <Badge variant="outline" className="bg-blue-50/10 text-blue-300 border-blue-300/30">
+                                  {progress?.status === 'completed' ? 'Terminé' : 'En cours'}
+                                </Badge>
+                              )}
+                            </div>
+                            <CardTitle className={`text-lg group-hover:text-primary transition-colors`}>
+                              {module.title}
+                            </CardTitle>
+                            {module.description && (
+                              <CardDescription className="text-sm text-muted-foreground">
+                                {module.description}
+                              </CardDescription>
+                            )}
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                              <span className="flex items-center">
+                                <Clock className="h-4 w-4 mr-1" />
+                                {module.estimated_duration_minutes}min
+                              </span>
+                              {progress?.progress_percentage !== undefined && (
+                                <span>
+                                  {progress.progress_percentage}% complété
+                                </span>
+                              )}
+                            </div>
+                            <Button 
+                              className={`w-full ${categoryConfig.color === 'primary' ? 'btn-matrix' : categoryConfig.color === 'secondary' ? 'btn-cyber' : 'btn-glass'}`}
+                              onClick={() => handleStartModule(module.id)}
+                            >
+                              {isStarted ? 'Continuer' : 'Commencer'}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                </div>
+              </TabsContent>
+            );
+          })}
+          
+          {filteredModules.length === 0 && (
+            <TabsContent value={selectedCategory} className="text-center py-12">
+              <p className="text-muted-foreground">Aucun module trouvé pour votre recherche.</p>
             </TabsContent>
-          ))}
+          )}
         </Tabs>
       </div>
     </div>
   );
 }
+
+export default Modules;

@@ -3,10 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Target, Trophy, Clock, TrendingUp, Star } from "lucide-react";
+import { BookOpen, Target, Trophy, Clock, TrendingUp, Star, Loader2 } from "lucide-react";
+import { useUserStats } from "@/hooks/useUserStats";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { stats, loading, progressPercentage } = useUserStats();
 
   return (
     <div className="min-h-screen bg-gradient-dark">
@@ -26,23 +30,39 @@ export default function Home() {
                 <BookOpen className="h-5 w-5 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-primary text-glow-primary">12</div>
-                <p className="text-xs text-muted-foreground">
-                  +2 depuis la semaine dernière
-                </p>
+                {loading ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-primary text-glow-primary">
+                      {stats.completedModules}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      sur {stats.totalModules} modules
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
 
             <Card className="glass-card hover-glow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Quiz Réussis</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total XP</CardTitle>
                 <Target className="h-5 w-5 text-secondary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-secondary text-glow-secondary">47</div>
-                <p className="text-xs text-muted-foreground">
-                  Score moyen: 87%
-                </p>
+                {loading ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-secondary text-glow-secondary">
+                      {stats.totalXP}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Niveau: {stats.level}
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
 
