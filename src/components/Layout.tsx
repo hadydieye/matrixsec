@@ -15,11 +15,11 @@ export function Layout({ children }: LayoutProps) {
   const { signOut, profile } = useAuth();
 
   return (
-    <SidebarProvider defaultOpen={!isMobile}>
-      <div className="min-h-screen flex w-full bg-background">
+    <SidebarProvider defaultOpen={!isMobile} open={isMobile ? false : undefined}>
+      <div className="min-h-screen flex w-full bg-background relative">
         <AppSidebar />
         
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className={`flex-1 flex flex-col min-w-0 ${isMobile ? 'w-full' : ''}`}>
           {/* Header with Trigger */}
           <header className="h-12 md:h-16 flex items-center border-b border-border bg-card/50 backdrop-blur-xl px-2 md:px-4 lg:px-6 shrink-0">
             <SidebarTrigger className="text-primary hover:text-primary-glow transition-colors" />

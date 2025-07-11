@@ -21,7 +21,7 @@ const mainItems = [
 ];
 
 export function AppSidebar() {
-  const { state, setOpen } = useSidebar();
+  const { state, setOpen, isMobile } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
@@ -32,19 +32,28 @@ export function AppSidebar() {
       ? "bg-primary/10 text-primary border-r-2 border-primary glow-primary font-medium" 
       : "text-muted-foreground hover:text-primary hover:bg-muted/50 transition-all duration-300";
 
+  // Désactiver le hover sur mobile
   const handleMouseEnter = () => {
-    if (collapsed) {
+    if (!isMobile && collapsed) {
       setOpen(true);
     }
   };
 
   const handleMouseLeave = () => {
-    setOpen(false);
+    if (!isMobile) {
+      setOpen(false);
+    }
   };
 
   return (
     <Sidebar 
-      className={`border-r border-border bg-card/30 backdrop-blur-xl transition-all duration-300 ${collapsed ? "w-12 md:w-16 blur-sm hover:blur-none" : "w-64 md:w-72"}`}
+      className={`border-r border-border bg-card/30 backdrop-blur-xl transition-all duration-300 ${
+        isMobile 
+          ? "w-full fixed z-40 h-full" 
+          : collapsed 
+            ? "w-12 md:w-16 blur-sm hover:blur-none" 
+            : "w-64 md:w-72"
+      }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -65,7 +74,7 @@ export function AppSidebar() {
                       className={getNavCls}
                     >
                       <item.icon className="h-4 md:h-5 w-4 md:w-5 shrink-0" />
-                      {!collapsed && <span className="ml-2 md:ml-3 text-sm md:text-base">{item.title}</span>}
+                      {(!collapsed || isMobile) && <span className="ml-2 md:ml-3 text-sm md:text-base">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
