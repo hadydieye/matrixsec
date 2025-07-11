@@ -234,50 +234,46 @@ function Modules() {
                         const isStarted = progress?.status !== undefined && progress?.status !== 'not_started';
                         
                         return (
-                         <Card key={module.id} className="relative overflow-hidden bg-gradient-to-br from-card/40 via-card/20 to-transparent border border-primary/20 hover:border-primary/40 transition-all duration-500 group backdrop-blur-xl">
-                            {/* Animated background effect */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent"></div>
-                            
-                            <CardHeader className="relative z-10">
-                              <div className="flex items-center justify-between mb-3">
-                                <Badge className={`${getDifficultyColor(module.difficulty)} backdrop-blur-sm border font-semibold`}>
-                                  {module.difficulty.toUpperCase()}
+                         <Card key={module.id} className="group relative overflow-hidden bg-card/60 border border-border/40 hover:border-primary/30 transition-all duration-300 backdrop-blur-sm">
+                            <CardHeader className="pb-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant="outline" className={`${getDifficultyColor(module.difficulty)} text-xs font-medium`}>
+                                  {module.difficulty}
                                 </Badge>
                                 {isStarted && (
-                                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-300 border-emerald-300/30 backdrop-blur-sm font-semibold">
-                                    {progress?.status === 'completed' ? '✓ TERMINÉ' : '⚡ EN COURS'}
+                                  <Badge variant="secondary" className="text-xs">
+                                    {progress?.status === 'completed' ? 'Terminé' : 'En cours'}
                                   </Badge>
                                 )}
                               </div>
-                              <CardTitle className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent group-hover:from-accent group-hover:to-primary transition-all duration-500">
+                              <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                                 {module.title}
                               </CardTitle>
                               {module.description && (
-                                <CardDescription className="text-sm text-muted-foreground/80 leading-relaxed">
+                                <CardDescription className="text-sm text-muted-foreground line-clamp-2">
                                   {module.description}
                                 </CardDescription>
                               )}
                             </CardHeader>
-                            <CardContent className="relative z-10">
-                              <div className="flex items-center justify-between text-sm mb-4">
-                                <div className="flex items-center text-primary/70">
-                                  <Clock className="h-4 w-4 mr-2" />
-                                  <span className="font-medium">{module.estimated_duration_minutes} min</span>
+                            <CardContent className="pt-0">
+                              <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                                <div className="flex items-center">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  <span>{module.estimated_duration_minutes} min</span>
                                 </div>
                                 {progress?.progress_percentage !== undefined && (
-                                  <div className="text-accent font-semibold">
-                                    {progress.progress_percentage}% complété
-                                  </div>
+                                  <span className="font-medium">
+                                    {progress.progress_percentage}% terminé
+                                  </span>
                                 )}
                               </div>
                               
-                              {/* Progress bar if module started */}
+                              {/* Simple progress bar */}
                               {progress?.progress_percentage !== undefined && (
-                                <div className="mb-4">
-                                  <div className="w-full bg-muted/20 rounded-full h-2 overflow-hidden">
+                                <div className="mb-3">
+                                  <div className="w-full bg-muted rounded-full h-1.5">
                                     <div 
-                                      className="bg-gradient-to-r from-primary to-accent h-full transition-all duration-700 rounded-full"
+                                      className="bg-primary h-1.5 rounded-full transition-all duration-300"
                                       style={{ width: `${progress.progress_percentage}%` }}
                                     ></div>
                                   </div>
@@ -285,13 +281,11 @@ function Modules() {
                               )}
                               
                               <Button 
-                                className="w-full relative overflow-hidden group/btn bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 hover:border-primary/60 text-primary hover:text-white transition-all duration-300 backdrop-blur-sm font-semibold"
+                                size="sm"
+                                className="w-full"
                                 onClick={() => navigate(`/quiz/${module.id}`)}
                               >
-                                <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                                <span className="relative z-10">
-                                  {isStarted ? '🚀 CONTINUER LE QUIZ' : '⚡ COMMENCER'}
-                                </span>
+                                {isStarted ? 'Continuer' : 'Commencer'}
                               </Button>
                             </CardContent>
                           </Card>
@@ -330,42 +324,56 @@ function Modules() {
                       const isStarted = progress?.status !== undefined && progress?.status !== 'not_started';
                       
                       return (
-                        <Card key={module.id} className="glass-card hover-glow group">
-                          <CardHeader>
+                        <Card key={module.id} className="group relative overflow-hidden bg-card/60 border border-border/40 hover:border-primary/30 transition-all duration-300 backdrop-blur-sm">
+                          <CardHeader className="pb-3">
                             <div className="flex items-center justify-between mb-2">
-                              <Badge className={getDifficultyColor(module.difficulty)}>
+                              <Badge variant="outline" className={`${getDifficultyColor(module.difficulty)} text-xs font-medium`}>
                                 {module.difficulty}
                               </Badge>
                               {isStarted && (
-                                <Badge variant="outline" className="bg-blue-50/10 text-blue-300 border-blue-300/30">
+                                <Badge variant="secondary" className="text-xs">
                                   {progress?.status === 'completed' ? 'Terminé' : 'En cours'}
                                 </Badge>
                               )}
                             </div>
-                            <CardTitle className={`text-lg group-hover:text-primary transition-colors`}>
+                            <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
                               {module.title}
                             </CardTitle>
                             {module.description && (
-                              <CardDescription className="text-sm text-muted-foreground">
+                              <CardDescription className="text-sm text-muted-foreground line-clamp-2">
                                 {module.description}
                               </CardDescription>
                             )}
                           </CardHeader>
-                          <CardContent>
-                            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                              <span className="flex items-center">
-                                <Clock className="h-4 w-4 mr-1" />
-                                {module.estimated_duration_minutes}min
-                              </span>
+                          <CardContent className="pt-0">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                              <div className="flex items-center">
+                                <Clock className="h-3 w-3 mr-1" />
+                                <span>{module.estimated_duration_minutes} min</span>
+                              </div>
                               {progress?.progress_percentage !== undefined && (
-                                <span>
-                                  {progress.progress_percentage}% complété
+                                <span className="font-medium">
+                                  {progress.progress_percentage}% terminé
                                 </span>
                               )}
                             </div>
+                            
+                            {/* Simple progress bar */}
+                            {progress?.progress_percentage !== undefined && (
+                              <div className="mb-3">
+                                <div className="w-full bg-muted rounded-full h-1.5">
+                                  <div 
+                                    className="bg-primary h-1.5 rounded-full transition-all duration-300"
+                                    style={{ width: `${progress.progress_percentage}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )}
+                            
                             <Button 
-                              className={`w-full ${categoryConfig.color === 'primary' ? 'btn-matrix' : categoryConfig.color === 'secondary' ? 'btn-cyber' : 'btn-glass'}`}
-                              onClick={() => handleStartModule(module.id)}
+                              size="sm"
+                              className="w-full"
+                              onClick={() => navigate(`/quiz/${module.id}`)}
                             >
                               {isStarted ? 'Continuer' : 'Commencer'}
                             </Button>
