@@ -21,7 +21,7 @@ const mainItems = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
@@ -32,9 +32,23 @@ export function AppSidebar() {
       ? "bg-primary/10 text-primary border-r-2 border-primary glow-primary font-medium" 
       : "text-muted-foreground hover:text-primary hover:bg-muted/50 transition-all duration-300";
 
+  const handleMouseEnter = () => {
+    if (collapsed) {
+      setOpen(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setOpen(false);
+  };
+
   return (
-    <Sidebar className={`border-r border-border bg-card/30 backdrop-blur-xl ${collapsed ? "w-12 md:w-16" : "w-64 md:w-72"}`}>
-      <SidebarContent className="bg-transparent">
+    <Sidebar 
+      className={`border-r border-border bg-card/30 backdrop-blur-xl transition-all duration-300 ${collapsed ? "w-12 md:w-16 blur-sm hover:blur-none" : "w-64 md:w-72"}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <SidebarContent className="bg-transparent transition-all duration-300">
         {/* Main Navigation */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-primary text-glow-primary px-2 md:px-4 py-2 text-xs font-semibold uppercase tracking-wider">
